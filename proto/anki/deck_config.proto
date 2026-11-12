@@ -175,6 +175,7 @@ message DeckConfig {
     bool stop_timer_on_answer = 38;
     float seconds_to_show_question = 41;
     float seconds_to_show_answer = 42;
+    float seconds_to_show_answer_button = 47;
     QuestionAction question_action = 36;
     AnswerAction answer_action = 43;
     bool wait_for_audio = 44;

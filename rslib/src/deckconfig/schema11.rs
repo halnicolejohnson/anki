@@ -88,6 +88,8 @@ pub struct DeckConfSchema11 {
     #[serde(default)]
     seconds_to_show_answer: f32,
     #[serde(default)]
+    seconds_to_show_answer_button: f32,
+    #[serde(default)]
     question_action: QuestionAction,
     #[serde(default)]
     answer_action: AnswerAction,
@@ -290,6 +292,7 @@ impl Default for DeckConfSchema11 {
             stop_timer_on_answer: false,
             seconds_to_show_question: 0.0,
             seconds_to_show_answer: 0.0,
+            seconds_to_show_answer_button: 0.0,
             question_action: QuestionAction::ShowAnswer,
             answer_action: AnswerAction::BuryCard,
             wait_for_audio: true,
@@ -381,6 +384,7 @@ impl From<DeckConfSchema11> for DeckConfig {
                 stop_timer_on_answer: c.stop_timer_on_answer,
                 seconds_to_show_question: c.seconds_to_show_question,
                 seconds_to_show_answer: c.seconds_to_show_answer,
+                seconds_to_show_answer_button: c.seconds_to_show_answer_button,
                 question_action: c.question_action as i32,
                 answer_action: c.answer_action as i32,
                 wait_for_audio: c.wait_for_audio,
@@ -444,6 +448,7 @@ impl From<DeckConfig> for DeckConfSchema11 {
             stop_timer_on_answer: i.stop_timer_on_answer,
             seconds_to_show_question: i.seconds_to_show_question,
             seconds_to_show_answer: i.seconds_to_show_answer,
+            seconds_to_show_answer_button: i.seconds_to_show_answer_button,
             answer_action: match i.answer_action {
                 1 => AnswerAction::AnswerAgain,
                 2 => AnswerAction::AnswerGood,
@@ -538,6 +543,7 @@ static RESERVED_DECKCONF_KEYS: Set<&'static str> = phf_set! {
     "stopTimerOnAnswer",
     "secondsToShowQuestion",
     "secondsToShowAnswer",
+    "secondsToShowAnswerButton",
     "questionAction",
     "answerAction",
     "waitForAudio",
@@ -567,6 +573,7 @@ mod test {
     use serde_json::Value;
 
     use super::*;
+    use crate::deckconfig::DEFAULT_DECK_CONFIG_INNER;
     use crate::prelude::*;
 
     #[test]
@@ -623,5 +630,21 @@ mod test {
                 _unused: 0
             }
         );
+    }
+
+    #[test]
+    fn answer_button_delay_round_trips() {
+        let config = DeckConfig {
+            inner: DeckConfigInner {
+                seconds_to_show_answer_button: 3.5,
+                ..DEFAULT_DECK_CONFIG_INNER
+            },
+            ..Default::default()
+        };
+
+        let schema11 = DeckConfSchema11::from(config);
+        let round_tripped = DeckConfig::from(schema11);
+
+        assert_eq!(round_tripped.inner.seconds_to_show_answer_button, 3.5);
     }
 }

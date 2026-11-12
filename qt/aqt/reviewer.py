@@ -169,6 +169,7 @@ class Reviewer:
         self._reps: int | None = None
         self._show_question_timer: QTimer | None = None
         self._show_answer_timer: QTimer | None = None
+        self._show_answer_button_timer: QTimer | None = None
         self.auto_advance_enabled = False
         gui_hooks.av_player_did_end_playing.append(self._on_av_player_did_end_playing)
 
@@ -198,6 +199,7 @@ class Reviewer:
 
     def cleanup(self) -> None:
         gui_hooks.reviewer_will_end()
+        self._clear_show_answer_button_timer()
         self.card = None
         self.auto_advance_enabled = False
 
@@ -246,6 +248,7 @@ class Reviewer:
     ##########################################################################
 
     def nextCard(self) -> None:
+        self._clear_show_answer_button_timer()
         self.previous_card = self.card
         self.card = None
         self._v3 = None
@@ -399,11 +402,41 @@ class Reviewer:
         )
         self._update_flag_icon()
         self._update_mark_icon()
-        self._showAnswerButton()
+        self._schedule_show_answer_button()
         self.mw.web.setFocus()
         # user hook
         gui_hooks.reviewer_did_show_question(c)
         self._auto_advance_to_answer_if_enabled()
+
+    def _clear_show_answer_button_timer(self) -> None:
+        if self._show_answer_button_timer:
+            self._show_answer_button_timer.deleteLater()
+            self._show_answer_button_timer = None
+
+    def _schedule_show_answer_button(self) -> None:
+        self._clear_show_answer_button_timer()
+
+        if self.card is None or self.state != "question":
+            return
+
+        conf = self.mw.col.decks.config_dict_for_deck_id(self.card.current_deck_id())
+        delay = conf.get("secondsToShowAnswerButton", 0)
+        if delay <= 0:
+            self._showAnswerButton()
+            return
+
+        self.bottom.web.eval("showQuestion(%s,%d);" % (json.dumps(""), 0))
+        self._show_answer_button_timer = self.mw.progress.timer(
+            int(delay * 1000),
+            self._on_show_answer_button_timeout,
+            repeat=False,
+            parent=self.mw,
+        )
+
+    def _on_show_answer_button_timeout(self) -> None:
+        if self.state != "question" or self.card is None:
+            return
+        self._showAnswerButton()
 
     def _auto_advance_to_answer_if_enabled(self) -> None:
         self._clear_auto_advance_timers()
@@ -462,6 +495,7 @@ class Reviewer:
         if self.mw.state != "review":
             # showing resetRequired screen; ignore space
             return
+        self._clear_show_answer_button_timer()
         self.state = "answer"
         c = self.card
         a = c.answer()

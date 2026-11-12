@@ -36,6 +36,10 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
             title: tr.deckConfigSecondsToShowAnswer(),
             help: tr.deckConfigSecondsToShowAnswerTooltip2(),
         },
+        secondsToShowAnswerButton: {
+            title: tr.deckConfigSecondsToShowAnswerButton(),
+            help: tr.deckConfigSecondsToShowAnswerButtonTooltip(),
+        },
         waitForAudio: {
             title: tr.deckConfigWaitForAudio(),
             help: tr.deckConfigWaitForAudioTooltip2(),
@@ -102,6 +106,25 @@ License: GNU AGPL, version 3 or later; http://www.gnu.org/licenses/agpl.html
                         )}
                 >
                     {settings.secondsToShowAnswer.title}
+                </SettingTitle>
+            </SpinBoxFloatRow>
+        </Item>
+
+        <Item>
+            <SpinBoxFloatRow
+                bind:value={$config.secondsToShowAnswerButton}
+                defaultValue={defaults.secondsToShowAnswerButton}
+                step={0.1}
+            >
+                <SettingTitle
+                    on:click={() =>
+                        openHelpModal(
+                            Object.keys(settings).indexOf(
+                                "secondsToShowAnswerButton",
+                            ),
+                        )}
+                >
+                    {settings.secondsToShowAnswerButton.title}
                 </SettingTitle>
             </SpinBoxFloatRow>
         </Item>
